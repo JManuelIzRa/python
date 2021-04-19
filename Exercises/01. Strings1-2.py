@@ -12,3 +12,5 @@ inicial2 = apellido1[0]
 inicial3 = apellido2[0]
 
 print('"You initials are ' + inicial1 + inicial2 + inicial3 + ' "' )
+
+print("Your initials are", nombre[0], apellido1[0], apellido2[0])
