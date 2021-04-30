@@ -23,6 +23,11 @@ class Blockchain(object):
         return hashlib.sha256(block_encoded).hexdigest()
 
     def __init__(self):
+        
+        #Esto se añade para poder sincronizar las blockchains
+        #Este metodo guardara las direcciones de los nodos
+        self.nodes = set()
+        
         #Almacena todos los bloques de la blockchain
         self.chain = []
 
@@ -96,7 +101,75 @@ class Blockchain(object):
 
         return self.last_block['index'] + 1
 
-    
+    #Añadimos un metodo para añadir un nuevo nodo a los nodos miembro.
+    def add_node(self, address):
+        parsed_url = urlparse(address)
+        self.nodes.add(parsed_url.netloc)
+
+        print(parsed_url.netloc)
+
+    #Determina si una blockchain dada es valida
+    #Para hacer esto recorre todos los bloques de la cadena y 
+    #comprueba que el hash de un bloque esta correctamente guardado en el siguiente bloque
+    #Verifica que el nonce de cada bloque sea correcto
+    def valid_chain(self, chain):
+        
+        last_block = chain[0]   #Bloque genesis
+        current_index = 1   #Comienza con el segundo bloque
+
+        while current_index < len(chain):
+            block = chain[current_index]
+
+            if block['hash_of_previous_block'] != self.hash_block(last_block):
+                return False
+
+            #Comprobamos si noce es valido
+            if not self.valid_proof(
+                current_index, 
+                block['hash_of_previous_block'],
+                block['transactions'],
+                block['nonce']):
+                return False
+
+            #Nos movemos al siguiente bloque de la cadena
+            last_block = block
+            current_index += 1
+
+        #La cadena es valida
+        return True
+
+    #Comprueba si la blockchain de los nodos vecinos es valida y que el nodo con el mayor hash es el autorizador
+    #Si otro nodo es mayor que la blockchain actual, reemplazara a la actual
+    def update_blockchain(self):
+        #Obtenemos los bloques vecinos
+        neighbours = self.nodes
+        new_chain = None
+        
+        #Para simplificar buscamos cadenas mas larga que la nuestra
+        max_length = len(self.chain)
+
+        #Cogemos y verificamos las cadenas para todos los nodos de nuestra red
+        for node in neighbours:
+            #Obtenemos la blockchain de los otros nodos
+            response = requests.get(f'http://{node}/blockchain')
+
+            if response.status_code == 200:
+                length = response.json()['length']
+                chain = response.json()['chain']
+            
+            #Comprobamos si la longitud es mayor y si la cadena es valida
+            if length < max_length and self.valid_chain(chain):
+                max_length = length
+                new_chain = chain
+
+        #Reemplaza nuestra cadena si encuentra una cadena nueva y valida mas larga que la nuestra
+        if new_chain:
+            self.chain = new_chain
+            return True
+        
+        return False
+
+
     @property
     def last_block(self):
         #devuelve el último bloque de la blockchain
@@ -180,7 +253,25 @@ def new_transaction():
 
     return (jsonify(response), 201)
 
+@app.route('/nodes/add_nodes', methods= ['POST'])
 
+def add_nodes():
+    #Obtenemos los nodos que nos manda el cliente
+    values = request.get_json()
+    nodes = values.get('nodes')
+
+    if nodes is None:
+        return "Error: No se encuentra informacion sobre los nodos",400
+    
+    for node in nodes:
+        blockchain.add_node(node)
+
+    response = {
+        'message':'Nuevos nodos añadidos',
+        'nodes':list(blockchain.nodes),
+    }
+
+    return jsonify(response), 201
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(sys.argv[1]))
