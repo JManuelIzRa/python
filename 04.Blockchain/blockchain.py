@@ -158,7 +158,7 @@ class Blockchain(object):
                 chain = response.json()['chain']
             
             #Comprobamos si la longitud es mayor y si la cadena es valida
-            if length < max_length and self.valid_chain(chain):
+            if length > max_length and self.valid_chain(chain):
                 max_length = length
                 new_chain = chain
 
@@ -272,6 +272,25 @@ def add_nodes():
     }
 
     return jsonify(response), 201
+
+@app.route('/nodes/sync', methods = ['GET'])
+
+def sync():
+    updated = blockchain.update_blockchain()
+
+    if updated:
+        response = {
+            'message':'La blockchain ha sido actualizada a la última',
+            'blockchain':blockchain.chain
+        }
+    else:
+        response = {
+            'message':'Nuestra blockchain actual es la ultima',
+            'blockchain':blockchain.chain
+        }
+
+    return jsonify(response),200
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(sys.argv[1]))
