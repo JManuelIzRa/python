@@ -38,7 +38,7 @@ class Blockchain(object):
         genesis_hash = self.hash_block("genesis_block")
 
         self.append_block(
-            hash_of_previus_block = genesis_hash,
+            hash_of_previous_block = genesis_hash,
             nonce = self.proof_of_work(0, genesis_hash, [])
         )
 
@@ -48,22 +48,22 @@ class Blockchain(object):
     #El nonce es un número arbitrario que solo puede utilizarse una vez.
 
     #Usamos PoW para encontrar el nonce para el bloque
-    def proof_of_work(self, index, hash_of_previus_block, transactions):
+    def proof_of_work(self, index, hash_of_previous_block, transactions):
 
         #Lo intentamos con nonce = 0
         nonce = 0
 
         #Intentamos crear un hash juntando el nonce con el hash del anterior nodo hasta que este sea válido
-        while self.valid_proof(index, hash_of_previus_block, transactions, nonce) is False:
+        while self.valid_proof(index, hash_of_previous_block, transactions, nonce) is False:
             nonce += 1
 
         return nonce
             
     
-    def valid_proof(self, index, hash_of_previus_block, transactions, nonce):
+    def valid_proof(self, index, hash_of_previous_block, transactions, nonce):
 
         #Creamos una cadena de caracteres que contenga el hash del nodo anterior y el contenido del bloque incluyendo el nonce
-        content = f'{index}{hash_of_previus_block}{transactions}{nonce}'.encode()
+        content = f'{index}{hash_of_previous_block}{transactions}{nonce}'.encode()
 
         #Creamos el hash usando sha256
         content_hash = hashlib.sha256(content).hexdigest()
@@ -73,14 +73,14 @@ class Blockchain(object):
 
 
     #Creamos un nuevo bloque y lo añadimos a la blockchain
-    def append_block(self, nonce, hash_of_previus_block):
+    def append_block(self, nonce, hash_of_previous_block):
 
         block = {
             'index': len(self.chain),
             'timestamp':time(),
             'transactions':self.current_transactions,
             'nonce':nonce,
-            'hash_of_previus_block':hash_of_previus_block
+            'hash_of_previous_block':hash_of_previous_block
         }
 
         #Reseteamos la lista actual de transacciones
@@ -100,6 +100,13 @@ class Blockchain(object):
         })
 
         return self.last_block['index'] + 1
+
+    @property
+    def last_block(self):
+        #devuelve el último bloque de la blockchain
+        return self.chain[-1]
+
+    #-------------------------A partir de aquí es para que la blockchain se sincronice con otras
 
     #Añadimos un metodo para añadir un nuevo nodo a los nodos miembro.
     def add_node(self, address):
@@ -170,11 +177,6 @@ class Blockchain(object):
         return False
 
 
-    @property
-    def last_block(self):
-        #devuelve el último bloque de la blockchain
-        return self.chain[-1]
-
 
 #La clase Blockchain ya está completa, lo siguiente es exponerla como una REST API usando Flask.
 app = Flask(__name__)
@@ -220,7 +222,7 @@ def mine_block():
     response = {
         'message':"Nuevo bloque minado",
         'index':block['index'],
-        'hash_of_previus_block':block['hash_of_previus_block'],
+        'hash_of_previous_block':block['hash_of_previous_block'],
         'nonce':block['nonce'],
         'transactions':block['transactions'],
     }
@@ -249,11 +251,11 @@ def new_transaction():
         values['amount']
     )
 
-    response = {'mensaje':f'La transaccion sera añadida al bloque {index}'}
+    response = {'message':f'La transaccion sera añadida al bloque {index}'}
 
     return (jsonify(response), 201)
 
-@app.route('/nodes/add_nodes', methods= ['POST'])
+@app.route('/nodes/add_nodes', methods = ['POST'])
 
 def add_nodes():
     #Obtenemos los nodos que nos manda el cliente
