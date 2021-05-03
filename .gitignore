@@ -1,1 +1,4 @@
 .vscode
+generar .exe.txt
+__pycache__
+build
