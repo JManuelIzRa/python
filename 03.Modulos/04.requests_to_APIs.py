@@ -11,7 +11,7 @@ import pprint
 #Esta peticion devuelve un JSON
 
 r = requests.get("https://opentdb.com/api.php?amount=10&category=15&difficulty=easy&type=multiple")
-
+print(r.status_code)
 print(r.text)
 
 #Working with JSON
