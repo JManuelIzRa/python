@@ -2,3 +2,5 @@
 generar .exe.txt
 __pycache__
 build
+
+.ipynb_checkpoints
