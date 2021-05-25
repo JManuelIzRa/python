@@ -2,11 +2,11 @@ import requests
 
 import json
 
-API_KEY = "6d6e15095a33634cc98a2b8517d945a6"
+API_KEY = ""
 
 id_ciudad = "2519239"
 
-r = requests.get("http://api.openweathermap.org/data/2.5/weather?id=2519239&lang=es&units=metric&appid=6d6e15095a33634cc98a2b8517d945a6")
+r = requests.get("http://api.openweathermap.org/data/2.5/weather?id=2519239&lang=es&units=metric&appid=")
 
 respuesta = json.loads(r.text)
 
