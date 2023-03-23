@@ -40,7 +40,8 @@ def ObtenerEnlaces():
 if __name__ == '__main__':
     
     option = webdriver.ChromeOptions()
-    option.add_argument('--user-data-dir=C:\\Users\\José Manuel\\AppData\\Local\\Google\\Chrome\\User Data\\Default')
+    #option.add_argument('--user-data-dir=C:\\Users\\José Manuel\\AppData\\Local\\Google\\Chrome\\User Data\\Default')
+    option.add_argument('--user-data-dir=C:\\Users\\jmanu\\AppData\\Local\\Google\\Chrome\\User Data\\Default')
     
     # Crear una sesión de Firefox
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=option)
@@ -51,6 +52,7 @@ if __name__ == '__main__':
     # Acceder a la aplicación web
     driver.get("https://www.einforma.com/informes-empresas/CORDOBA/Rambla--La-.html")
 
+    wait = WebDriverWait(driver, 20)
     #accept_cookies = driver.find_element(By.ID,'didomi-notice-agree-button')
 
     #accept_cookies.click()
@@ -73,16 +75,18 @@ if __name__ == '__main__':
             break
      
 
-    #print(enlaces)
+    print(enlaces)
 
-    driver.get(enlaces[10])
+    driver.get(enlaces[20])
+
+    wait.until(EC.visibility_of_element_located((By.TAG_NAME, "table")))
 
     # encontrar la tabla que contiene los tbody
-    tablas = driver.find_elements_by_tag_name("table")
+    tablas = driver.find_elements(By.TAG_NAME, value="table")
 
     # obtener todos los elementos tbody de la tabla
     for tabla in tablas:
-        tbody_elementos = tabla.find_elements_by_tag_name("tbody")
+        tbody_elementos = tabla.find_elements(By.TAG_NAME, value="tbody")
 
         for elemento in tbody_elementos:
                 contenido_tbody = elemento.text
